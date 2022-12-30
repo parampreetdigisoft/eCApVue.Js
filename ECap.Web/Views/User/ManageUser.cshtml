@@ -1,0 +1,408 @@
+﻿@{
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+    ViewData["Title"] = "Manage Users";
+}
+
+@section styles{
+    <!-- Sweet Alert css-->
+  @*  <link href="~/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />*@
+  <style>
+     .page {
+    display: block;
+    padding: 0.375rem 0.75rem;
+    color: var(--vz-link-color);
+    background-color: var(--vz-card-bg);
+    border: 1px solid var(--vz-border-color);
+    border-radius: 0.25rem;
+    cursor:pointer;
+}
+.active.page {
+        color: #fff;
+    background-color: #3d78e3;
+    border-color: #3d78e3;
+}
+.active.page a
+{
+    color:#ffffff !important;
+}
+
+.next , .prev , .first , .last{
+    color: #3d78e3;
+    font-weight: 500;
+    padding: .375rem .75rem;
+    background-color: var(--vz-card-bg);
+    border: 1px solid var(--vz-border-color);
+    border-radius: .25rem;
+}
+
+.next.disabled a, .prev.disabled a , .first.disabled a ,.last.disabled a{
+    color: #878a99;
+    cursor: default;
+}
+
+.sort{
+    cursor:pointer;
+}
+.pointer
+{
+  cursor:pointer;
+}
+.loginInfo{
+    padding-left: 106px
+}
+.table .sort::before {
+    top: auto !important;
+    bottom: 5px;
+}
+.table .sort::after {
+    top: auto !important;
+    bottom: 13px;
+}
+
+.cus_modal_title
+{
+    font-size: 26px;
+    font-weight: 700;
+}
+  </style>
+}
+<div id="myuser">
+ <div class="row">
+      
+      
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title mb-0">Manage Users</h4>
+                </div><!-- end card header -->
+                <div class="card-body">
+                    <div id="customerList">
+                        <div class="row g-4 mb-3">
+                            <div class="col-sm-auto">
+                                <div>
+                                       <ul style="list-style: none;">
+                                           <li><img  src="~/assets/images/tick.gif"/>Test active </li>
+                                           <li><img src="~/assets/images/black-dot.png" style="width: 21px;"/>Report uploaded</li>
+                                            <li><img src="~/assets/images/admin.png" style="width: 25px;"/>Group administrator</li>
+                                       </ul>
+                                      </div>
+                                      <div style="position: absolute;top: 0px;left: 188px;">
+                                       <ul style="list-style: none;width: 174px">
+                                            <li><img src="~/assets/images/white_hole.png" style="width: 19px;"/>	Test completed</li>
+                                            <li><img src="~/assets/images/cross.gif" style="width: 21px;"/>Test expired</li>
+                                       </ul>
+                                       </div>
+                                
+                               </div>
+                                <div class="col-sm">
+                                        <div class="d-flex justify-content-sm-end">
+                                             <div class="ms-4">
+                                          <select v-model="selected" class="form-control"id='ddlSerarch' style="appearance: auto;">
+                                        <option v-for="item in filterOptions" v-bind:value="item.id">
+                                            {{item.Name}}
+                                        </option>
+                                        </select>  
+                                    </div>
+                                           
+                                    <div class="search-box ms-2">
+                                        <input type="text" class="form-control search" v-on:keyup="applyFilter()" v-model='searchBy' placeholder="Search...">
+                                        <i class="ri-search-line search-icon"></i>
+                                    </div>
+                                </div>
+                                </div>
+                               
+                            </div>
+                        </div>
+                        <div class="table-responsive table-card mt-3 mb-1">
+                            <table class="table align-middle table-nowrap" id="customerTable">
+                                <thead class="table-light">
+                                    <tr>
+                                 <th scope="col" style="width: 50px;">
+                                     <div class="form-check">
+                                        @* <input class="form-check-input" type="checkbox" id="checkAll" value="option">*@
+                                     </div>
+                                 </th>
+                                <th class="sort" data-column="userId" data-sortorder="asc" v-on:click="tableSort($event)">User No.</th>
+                                <th class="sort" data-column="user_FirstName" data-sortorder="asc" v-on:click="tableSort($event)">Name</th>
+                                <th class="sort" data-column="user_Login" data-sortorder="asc" v-on:click="tableSort($event)">User ID</th>
+                                <th class="sort" data-column="lastTestCreationDate" data-sortorder="asc" v-on:click="tableSort($event)">Last Test<br>Creation Date</th>
+                                <th>Status</th>
+                                <th>User<br>Info</th>
+                                <th>User<br>Page</th>
+                                <th>LN</th>
+                                <th class="sort">Client <br />Group</th>
+                                <th>Receive<br /> Email</th>
+                                <th>View<br /> Results</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="list form-check-all" v-for="item in UsersData"><tr>
+                                        <th scope="row">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" v-model="selectedRows" :value="item.userId" name="chk_child">
+                                            </div>
+                                        </th>
+                                        <td class="customer_name"> {{ item.userId }}</td>
+                                        <td class="email">{{ item.user_FirstName }}</td>
+                                        <td class="email">{{ item.user_Login }}</td>
+                                        <td class="date">{{ item.lastTestCreationDate }}</td>
+                                         <td class="date"> 
+                                             <img v-if="item.user_AdminRole === 'CA' || item.userStatus === 1" src="~/assets/images/tick.gif" />
+                                             <img v-if="item.userStatus === 0" src="~/assets/images/cross.gif" />
+                                             <img v-if="item.userStatus === 2" height="15" width="15" src="~/assets/images/white_hole.png" />
+                                             <img v-if="item.userStatus === 3" height="15" width="15" src="~/assets/images/black-dot.png" />
+                                             <img v-if="item.userStatus === 4" height="15" width="15" src="~/assets/images/admin.png" />
+                                         </td>
+                                        <td><span class="badge badge-soft-success text-uppercase pointer" v-on:click='UserInfo(item.userId);'>View</span></td>
+                                        <td><span class="badge badge-soft-success text-uppercase pointer"><a :href="getUserPageURL(item.prodLang,item.user_AdminRole)">View</a></span></td>
+                                         <td class="date">{{ item.prodLang }}</td>
+                                         <td class="date">{{ item.c_name }}</td>
+                                          <td class="date"> 
+                                              <div class="form-check" v-if="item.sendMail_Flag === true">
+                                              <input class="form-check-input" v-model="selectedEmailRows[item.userId]"  type="checkbox" checked />
+                                              </div>
+                                              <div class="form-check" v-if="item.sendMail_Flag === false">
+                                              <input class="form-check-input" v-model="selectedEmailRows[item.userId]" type="checkbox" />
+                                              </div>
+                                          </td>
+                                          <td class="date">
+                                               <div class="form-check" v-if="item.userLogin_Flag === true">
+                                              <input class="form-check-input" v-model="selectedViewRows[item.userId]" type="checkbox" checked />
+                                              </div>
+                                              <div class="form-check" v-if="item.userLogin_Flag === false">
+                                              <input class="form-check-input" v-model="selectedViewRows[item.userId]" type="checkbox" />
+                                              </div>
+                                          </td>
+                                    </tr>
+                                    </tbody>
+                            </table>
+
+                            <div class="noresult" v-if="!TotalUsers.length && !loading" >
+                                <div class="text-center">
+                                    <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#121331,secondary:#08a88a" style="width:75px;height:75px">
+                                    </lord-icon>
+                                    <h5 class="mt-2">Sorry! No Result Found</h5>
+                                   @* <p class="text-muted mb-0">
+                                        We've searched more than 150+ Orders We did not find any
+                                        orders for you search.
+                                    </p>*@
+                                </div>
+                            </div>
+                        </div>
+                        <div class="progress justify-content-center" style="text-align:center;width: 25%;margin: 0 auto;" v-if="loading">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%"></div>
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <ul class="pagination listjs-pagination mb-0" id="pagination1"></ul>
+                        </div>
+                        <br />
+                        <br />
+                        <div class="text-center">
+                             <div class="mb-3">
+                                            <div class="text-danger" v-if="message != ''"><strong>{{message}}</strong></div>
+                                          </div>
+                        </div>
+                         <div class="text-center">
+                          
+                        <a class="btn btn-primary bg-gradient waves-effect waves-light" href="/user/Registration">Add User</a>
+
+                        <button type="button" class="btn btn-danger bg-gradient waves-effect waves-light" v-on:click='deleteUsers();'>Delete</button>
+
+                        <button type="button" class="btn btn-success bg-gradient waves-effect waves-light" v-on:click='saveEmails();'>Save Email Changes</button>
+                        
+                        <button type="button" class="btn btn-success bg-gradient waves-effect waves-light" v-on:click='saveViewResults();'>Save View Result</button>
+
+                        <button type="button" class="btn btn-warning bg-gradient waves-effect waves-light" v-on:click="GetAllManageUser('')">Refresh</button>
+
+                        <button type="button" class="btn btn-primary bg-gradient waves-effect waves-light">Move to New Group</button>
+                        </div>
+                        
+                    </div>
+                </div><!-- end card -->
+            </div>
+            <!-- end col -->
+
+        
+
+        </div>
+        <!--Modal popup-->
+    <div class="modal fade show" id="UserInformatioModal" tabindex="-1"  aria-modal="true" role="dialog">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header" style="padding-bottom:16px !important;">
+                    <h5 class="modal-title col text-center cus_modal_title" id="exampleModalLiveLabel">E-CAP User Information</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="btn-close"></button>
+                </div>
+                <div class="modal-body">
+                   @* <h1 class="text-center"><u>E-CAP User Information</u> </h1>*@
+                   <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title mb-3">Login Information</h5>
+                            <div class="table-responsive">
+                                <table class="table table-borderless mb-0">
+                                    <tbody>
+                                        <tr>
+                                            <th class="ps-0" scope="row" style="width: 120px;">User Number :</th>
+                                            <td class="text-muted">{{User.userId}}</td>
+                                        </tr>
+                                        <tr>
+                                            <th class="ps-0" scope="row" style="width: 120px;">UserID :</th>
+                                            <td class="text-muted">{{User.user_Login}}</td>
+                                        </tr>
+                                        <tr>
+                                            <th class="ps-0" scope="row" style="width: 120px;">Password :</th>
+                                            <td class="text-muted">{{User.user_Pwd}}</td>
+                                        </tr>
+                                        <tr>
+                                            <th class="ps-0" scope="row" style="width: 120px;">Department : </th>
+                                            <td class="text-muted">
+                                                {{User.user_Department}}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th class="ps-0" scope="row" style="width: 120px;">Group Name :</th>
+                                            <td class="text-muted">{{User.user_ClientGroup}}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div><!-- end card body -->
+                    </div>
+                    <div>
+
+                        <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title mb-3">Test History</h5>
+                            <br />
+                            <div class="table-responsive table-card">
+                      <table class="table border-3 mb-0">
+                           <thead class="table-light">
+                             <tr>
+                               <th><strong>Test Type</strong></th>
+                                <th><strong>Language</strong></th>
+                                <th><strong>Products</strong></th>
+                                <th><strong>Document Upload Date</strong></th>
+                                <th><strong>Purchase Date</strong></th>
+                                <th><strong>Completed</strong></th>
+                                <th><strong>Status</strong></th>
+                                <th><strong>Mark Test Complete</strong></th>
+                             </tr>
+                           </thead>
+                           <tbody>
+                             <tr  v-for="item in Products">
+                              <td>{{item.productNameEn}}</td>
+                               <td> {{item.productLang}}</td>
+                                <td>
+                                    <div>{{ item.Score}}</div>
+                                    <div v-if="item.full!== null">{{ item.full}}</div>
+                                    <div v-if="item.Pro!== null">{{ item.Pro}}</div>
+                                </td>
+                                 
+                                 <td>
+                                     <div>{{ item.Score}}</div>
+                                    <div v-if="item.full!== null">{{ item.full}}</div>
+                                    <div v-if="item.Pro!== null">{{ item.Pro}}</div>
+                                  </td>
+                                
+                               <td>{{ new Date(item.createdDate).toLocaleString() }}</td>
+                              
+                                <td>
+                                     <div v-if="item.completedate!== null">{{  new Date(item.completedate).toLocaleString()}}</div>
+                                    </td>
+                                <td> 
+                                  <img v-if="item.statusCode === 0" src="~/assets/images/cross.gif" />
+                                  <img v-if="item.statusCode === 2" height="15" width="15" src="~/assets/images/white_hole.png" />
+                                  <img v-if="item.statusCode === 3" height="15" width="15" src="~/assets/images/black-dot.png" />
+                                  <img v-if="item.statusCode === 4" height="15" width="15" src="~/assets/images/admin.png" />
+                                </td>
+                                <td> <div v-if="item.isProductActive === true && item.completedate == ''" class="badge badge-soft-success text-uppercase pointer" v-on:click='markTestComplete(item.purchaseId,item.userId);'> Mark </div></td>
+                              </tr>
+                           </tbody>
+                        </table>
+                        </div>
+                        </div><!-- end card body -->
+                    </div>
+                    
+
+                        <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title mb-3">Personal Information</h5>
+                            <div class="table-responsive">
+                                <table class="table table-borderless mb-0">
+                                    <tbody>
+                                        <tr>
+                                            <th class="ps-0" scope="row" style="width: 120px;">Name :</th>
+                                            <td class="text-muted">{{User.user_FirstName}}</td>
+                                        </tr>
+                                        <tr>
+                                            <th class="ps-0" scope="row" style="width: 120px;">Address1 : </th>
+                                            <td class="text-muted">{{User.user_Address1}}</td>
+                                        </tr>
+                                        <tr>
+                                            <th class="ps-0" scope="row" style="width: 120px;">Address2 : </th>
+                                            <td class="text-muted">{{User.user_Address2}}</td>
+                                        </tr>
+                                        <tr>
+                                            <th class="ps-0" scope="row" style="width: 120px;">State : </th>
+                                            <td class="text-muted">
+                                                {{User.user_State}}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th class="ps-0" scope="row" style="width: 120px;">Zipcode :</th>
+                                            <td class="text-muted">{{User.user_Zipcode}}</td>
+                                        </tr>
+                                        <tr>
+                                            <th class="ps-0" scope="row" style="width: 120px;">Phone :</th>
+                                            <td class="text-muted">{{User.user_Phone}}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div><!-- end card body -->
+                    </div>
+                     </div>
+                     <div class="d-flex gap-2 justify-content-center mt-4 mb-2" >
+                        <button type="button" class="btn w-sm btn-light" data-bs-dismiss="modal">Close</button>
+                     </div>
+                </div>
+           </div>
+        </div>
+    </div>
+        <!--End popup-->
+
+        <div class="modal fade show" id="deleteRecordModal" tabindex="-1"  aria-modal="true" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header" style="padding-bottom: 16px;">
+
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="btn-close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mt-2 text-center">
+                        <lord-icon src="https://cdn.lordicon.com/gsqxdxog.json" trigger="loop" colors="primary:#f7b84b,secondary:#f06548" style="width:100px;height:100px"></lord-icon>
+                        <div class="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
+                            <h4>Are you Sure ?</h4>
+                            <p class="text-muted mx-4 mb-0">Are you Sure You want to Remove this Record ?</p>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
+                        <button type="button" class="btn w-sm btn-light" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn w-sm btn-danger " v-on:click="ConfirmDeleteUsers()" id="delete-record">Yes, Delete It!</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+        </div>
+      
+        
+ 
+
+
+
+
+@section scripts{
+      <script src="~/js/vue/jq-paginator.min.js"></script>
+    <script src="~/js/ManageUser.js"></script>
+}
+

@@ -1,0 +1,9 @@
+/.vs
+/ECap.Core/bin
+/ECap.Core/obj
+/ECap.Infrastructure/obj
+/ECap.Infrastructure/bin
+/ECap.Web/obj
+/ECap.Web/bin
+/ECap.DTO/obj
+/ECap.DTO/bin
